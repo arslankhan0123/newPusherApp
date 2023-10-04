@@ -29,6 +29,7 @@ class MessageController extends Controller
     }
 
     public function sendMessage(Request $request) {
+        // dd($request->all());
         $request->validate([
            'message' => 'required',
            'receiver_id' => 'required'
@@ -53,7 +54,7 @@ class MessageController extends Controller
                 $data['created_at'] = $message->created_at;
                 $data['message_id'] = $message->id;
 
-                // event(new PrivateMessageEvent($data));
+                event(new PrivateMessageEvent($data));
 
                 return response()->json([
                    'data' => $data,

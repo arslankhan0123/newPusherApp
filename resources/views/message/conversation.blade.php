@@ -111,7 +111,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 
 <script>
-    $(function() {
+    $(function (){
         let $chatInput = $(".chat-input");
         let $chatInputToolbar = $(".chat-input-toolbar");
         let $chatBody = $(".chat-body");
@@ -123,6 +123,7 @@
         let socket_port = '8005';
         let socket = io(ip_address + ':' + socket_port);
         let friendId = "{{ $friendInfo->id }}";
+        
 
         socket.on('connect', function() {
             socket.emit('user_connected', user_id);
@@ -133,25 +134,52 @@
             $userStatusIcon.removeClass('text-success');
             $userStatusIcon.attr('title', 'Away');
 
-            $.each(data, function(key, val) {
+            $.each(data, function (key, val) {
                 if (val !== null && val !== 0) {
-                    let $userIcon = $(".user-icon-" + key);
+                    let $userIcon = $(".user-icon-"+key);
                     $userIcon.addClass('text-success');
-                    $userIcon.attr('title', 'Online');
+                    $userIcon.attr('title','Online');
                 }
             });
         });
 
-        $chatInput.keypress(function(e) {
-            let message = $(this).html();
-            if (e.which === 13 && !e.shiftKey) {
-                $chatInput.html("");
-                sendMessage(message);
-                return false;
-            }
+        $chatInput.keypress(function (e) {
+           let message = $(this).html();
+           if (e.which === 13 && !e.shiftKey) {
+            console.log(friendId);
+            // return;
+               $chatInput.html("");
+               sendMessage(message);
+               return false;
+           }
         });
 
+        function sendMessage(message) {
+            let url = "{{ route('message.send-message') }}";
+            let form = $(this);
+            let formData = new FormData();
+            let token = "{{ csrf_token() }}";
 
+            formData.append('message', message);
+            formData.append('_token', token);
+            formData.append('receiver_id', friendId);
+
+            // appendMessageToSender(message);
+
+            $.ajax({
+               url: url,
+               type: 'POST',
+               data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'JSON',
+               success: function (response) {
+                   if (response.success) {
+                       console.log(response.data);
+                   }
+               }
+            });
+        }
 
         function appendMessageToSender(message) {
             let name = '{{ $myInfo->name }}';
@@ -163,8 +191,8 @@
                 '\n' +
                 '<div class="chat-name font-weight-bold">\n' +
                 name +
-                '<span class="small time text-gray-500" title="' + getCurrentDateTime() + '">\n' +
-                getCurrentTime() + '</span>\n' +
+                '<span class="small time text-gray-500" title="'+getCurrentDateTime()+'">\n' +
+                getCurrentTime()+'</span>\n' +
                 '</div>\n' +
                 '</div>\n';
 
@@ -174,8 +202,8 @@
                 '                        </div>';
 
 
-            let newMessage = '<div class="row message align-items-center mb-2">' +
-                userInfo + messageContent +
+            let newMessage = '<div class="row message align-items-center mb-2">'
+                +userInfo + messageContent +
                 '</div>';
 
             $messageWrapper.append(newMessage);
@@ -191,8 +219,8 @@
                 '\n' +
                 '<div class="chat-name font-weight-bold">\n' +
                 name +
-                '<span class="small time text-gray-500" title="' + dateFormat(message.created_at) + '">\n' +
-                timeFormat(message.created_at) + '</span>\n' +
+                '<span class="small time text-gray-500" title="'+dateFormat(message.created_at)+'">\n' +
+                timeFormat(message.created_at)+'</span>\n' +
                 '</div>\n' +
                 '</div>\n';
 
@@ -202,19 +230,20 @@
                 '                        </div>';
 
 
-            let newMessage = '<div class="row message align-items-center mb-2">' +
-                userInfo + messageContent +
+            let newMessage = '<div class="row message align-items-center mb-2">'
+                +userInfo + messageContent +
                 '</div>';
 
             $messageWrapper.append(newMessage);
         }
 
-        socket.on("private-channel:App\\Events\\PrivateMessageEvent", function(message) {
-            appendMessageToReceiver(message);
+        socket.on("private-channel:App\\Events\\PrivateMessageEvent", function (message)
+        {
+           appendMessageToReceiver(message);
         });
 
         let $addGroupModal = $("#addGroupModal");
-        $(document).on("click", ".btn-add-group", function() {
+        $(document).on("click", ".btn-add-group", function (){
             $addGroupModal.modal();
         });
 
@@ -222,44 +251,4 @@
     });
 </script>
 
-
-
-
-
-<script>
-    $(function() {
-        let user_id = "{{ auth()->user()->id }}";
-        let ip_address = '127.0.0.1';
-        let socket_port = '8005';
-        // console.log(user_id);
-        let socket = io(ip_address + ':' + socket_port);
-
-        socket.on('connect', function() {
-            // alert('here');
-            socket.emit('user_connected', user_id);
-        });
-
-        socket.on('updateUserStatus', (data) => {
-            // console.log(data);
-            let $userStatusIcon = $('.user-status-icon');
-            $userStatusIcon.removeClass('text-success');
-            $userStatusIcon.attr('title', 'Away');
-
-            $.each(data, function(key, val) {
-                if (val !== null && val !== 0) {
-                    console.log(key);
-                    let $userIcon = $(".user-icon-" + key);
-                    // console.log($userIcon)
-                    $userIcon.addClass('text-success');
-                    $userIcon.attr('title', 'Online');
-
-                    let $userSecondIcon = $(".user-second-icon-" + key);
-                    $userSecondIcon.addClass('text-success');
-                    $userSecondIcon.attr('title', 'Online');
-
-                }
-            });
-        });
-    });
-</script>
 @endpush
